@@ -1,35 +1,42 @@
-#include <SoftwareSerial.h>
+#define BLYNK_PRINT Serial
+#define BLYNK_TEMPLATE_ID ""
+#define BLYNK_TEMPLATE_NAME ""
+#define BLYNK_AUTH_TOKEN ""
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
 
-SoftwareSerial mySerial(2, 3);
-const uint8_t pins[] = {6, 7, 8, 9, 13};
+#define WIFI_SSID "mobil_rc"
+#define WIFI_PASS ""
+
+const uint8_t pins[] = {5, 4, 12, 13, 2};
+#define PINS_LEN (sizeof(pins) / sizeof(pins[0]))
 
 void setup() {
   Serial.begin(9600);
-  mySerial.begin(9600);
   Serial.println("Mulai");
-  
-  for (const pin : pins)
-    pinMode(pin, OUTPUT);
+  for (uint8_t i = 0; i < PINS_LEN; i++)
+    pinMode(pins[i], OUTPUT);
+  Blynk.begin(BLYNK_AUTH_TOKEN, WIFI_SSID, WIFI_PASS);
 }
 
 void loop() {
-  if (!mySerial.available()) return;
+  Blynk.run();
+}
 
-  char arah =  mySerial.read();
-  Serial.println(arah);
+BLYNK_CONNECTED() {
+  motor(0);
+}
 
-  switch (arah) {
-    case 'F': motor(0b0101); break;
-    case 'B': motor(0b1010); break;
-    case 'L': motor(0b1001); break;
-    case 'R': motor(0b0110); break;
-    case 'W': digitalWrite(pins[4], HIGH); break;
-    case 'w': digitalWrite(pins[4], LOW); break;
-    default: motor(0b0000);
-  }
+BLYNK_DISCONNECTED() {
+  motor(16);
+}
+
+BLYNK_INPUT_DEFAULT() {
+  uint8_t val = getValue.asInt();
+  Serial.println(val);
 }
 
 void motor(uint8_t val) {
-  for (uint8_t i = 0; i < 5; i++)
+  for (uint8_t i = 0; i < PINS_LEN; i++)
     digitalWrite(pins[i], (val >> i) & 1);
 }
