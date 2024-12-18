@@ -1,4 +1,3 @@
-#define BLYNK_PRINT Serial
 #define BLYNK_TEMPLATE_ID ""
 #define BLYNK_TEMPLATE_NAME ""
 #define BLYNK_AUTH_TOKEN ""
@@ -16,8 +15,6 @@ static uint32_t previous = 0;
 static uint32_t current;
 
 void setup() {
-  Serial.begin(9600);
-  Serial.println("Mulai");
   for (uint8_t i = 0; i < PINS_LEN; i++)
     pinMode(pins[i], OUTPUT);
   Blynk.begin(BLYNK_AUTH_TOKEN, WIFI_SSID, WIFI_PASS);
@@ -61,6 +58,7 @@ BLYNK_INPUT_DEFAULT() {
 
   if (val > 0b11111) telolet_state = true;
   if (val == 16 && telolet_state) telolet_stop();
+
   motor(val);
   prev_val = val;
 }
