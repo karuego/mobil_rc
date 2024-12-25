@@ -1,0 +1,44 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  GREETING: Hello, World!
+  CONFIG:
+    - -DUSE_ENV_VAR=1
+    - -DBLYNK_TEMPLATE_ID=\"${BLYNK_TEMPLATE_ID}\"
+    - -DBLYNK_TEMPLATE_NAME=\"${BLYNK_TEMPLATE_NAME}\"
+    - -DBLYNK_AUTH_TOKEN=\"${BLYNK_AUTH_TOKEN}\"
+    - -DWIFI_SSID=\"${WIFI_SSID}\"
+    - -DWIFI_PASS=\"${WIFI_PASS}\"
+  FLAGS0:
+    - -b ${FQBN} --port ${PORT}
+    - --verbose --warnings all --jobs 0
+    - --build-property "build.extra_flags={{ range $idx, $val := .CONFIG }}{{ if $idx }} {{ end }}{{ $val }}{{ end }}"
+  FLAGS: |
+    {{ range .FLAGS0 }}{{ . }} {{ end }}
+
+
+dotenv: [".env"]
+
+tasks:
+  default:
+    cmds:
+      - echo "{{.GREETING}}"
+      - echo "$PORT"
+    silent: true
+
+  push:
+    cmds:
+      - git push --all --tags
+
+  compile:
+    cmds:
+      - echo ${BLYNK_AUTH_TOKEN}
+      - arduino-cli compile {{ .action }} {{ .FLAGS }}
+
+  upload:
+    cmds:
+      - task: compile
+        vars:
+          action: "--upload"

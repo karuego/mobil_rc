@@ -1,13 +1,16 @@
+#ifndef USE_ENV_VAR
 #define BLYNK_TEMPLATE_ID ""
 #define BLYNK_TEMPLATE_NAME ""
 #define BLYNK_AUTH_TOKEN ""
-#include <BlynkSimpleEsp8266.h>
 
 #define WIFI_SSID "mobil_rc"
 #define WIFI_PASS ""
+#endif
 
-const uint8_t pins[] = {5, 4, 12, 13, 2};
-#define PINS_LEN (sizeof(pins) / sizeof(pins[0]))
+#include <BlynkSimpleEsp8266.h>
+
+const uint8_t pins[5] = {5, 4, 12, 13, 2}; // GPIO
+#define PINS_LEN sizeof(pins) / sizeof(pins[0])
 
 bool telolet_state = false;
 bool is_waiting = false;
@@ -15,22 +18,24 @@ static uint32_t previous = 0;
 static uint32_t current;
 
 void setup() {
-  for (uint8_t i = 0; i < PINS_LEN; i++)
-    pinMode(pins[i], OUTPUT);
+  for (const uint8_t &pin : pins)
+    pinMode(pin, OUTPUT);
   Blynk.begin(BLYNK_AUTH_TOKEN, WIFI_SSID, WIFI_PASS);
 }
 
 void loop() {
   current = millis();
-  if (!Blynk.connected()) {
+  // FIXME: Blynk.connected melakukan blocking
+  /*if (!Blynk.connected()) {
     if (current - previous >= 200)
       waiting();
   } else {
     waiting0();
-  }
+  }*/
 
   Blynk.run();
-  telolet();
+  // FIXME: telolet tidak berfungsi sebagaimana mestinya
+  // telolet();
 
   previous = current;
 }
@@ -65,7 +70,7 @@ BLYNK_INPUT_DEFAULT() {
 
 void motor(uint8_t val) {
   for (uint8_t i = 0; i < PINS_LEN; i++)
-    digitalWrite(pins[i], (val >> i) & 1);
+    digitalWrite(pins[i], (val >> i) & 0x01);
 }
 
 void waiting() {
