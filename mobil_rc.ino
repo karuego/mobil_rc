@@ -3,6 +3,7 @@
 #define BLYNK_TEMPLATE_NAME ""
 #define BLYNK_AUTH_TOKEN ""
 
+// TODO: Gunakan Blynk.Edgent
 #define WIFI_SSID "mobil_rc"
 #define WIFI_PASS ""
 #endif
@@ -12,8 +13,7 @@
 const uint8_t pins[5] = {5, 4, 12, 13, 2}; // GPIO
 #define PINS_LEN sizeof(pins) / sizeof(pins[0])
 
-bool telolet_state = false;
-bool is_waiting = false;
+uint8_t prog_state;
 static uint32_t previous = 0;
 static uint32_t current;
 
@@ -56,13 +56,23 @@ BLYNK_INPUT_DEFAULT() {
   Serial.println(val);
 
   if (prev_val != 0 && val != 0) {
-    val &= prev_val;
-    if (val == 2 || val == 8)
-      val ^= 0b1010;
+    if (val & 128) {
+      val ^= 128;
+      val ^= prev_val;
+    } else {
+      val &= prev_val;
+      if (val & 0b1010)
+        val ^= 0b1010;
+    }
   }
 
-  if (val > 0b11111) telolet_state = true;
-  if (val == 16 && telolet_state) telolet_stop();
+  if (val & 32) {
+    if (prog_state & 1) {
+      telolet_stop();
+    } else {
+      prog_state |= 1U;
+    }
+  }
 
   motor(val);
   prev_val = val;
@@ -74,13 +84,14 @@ void motor(uint8_t val) {
 }
 
 void waiting() {
-  is_waiting = true;
   digitalWrite(pins[4], !digitalRead(pins[4]));
+  if (prog_state & 2) return;
+  prog_state |= 2;
 }
 
 void waiting0() {
-  if (!is_waiting) return;
-  is_waiting = false;
+  if (!(prog_state & 2)) return;
+  prog_state &= ~2;
   digitalWrite(pins[4], 0);
 }
 
@@ -106,7 +117,7 @@ constexpr uint16_t total_duration = sum_array(duration, note_length);
 uint8_t note_idx = 0;
 
 void telolet() {
-  if (!telolet_state) return;
+  if (!(prog_state & 1)) return;
 
   if (current - previous < duration[note_idx])
     return;
@@ -119,6 +130,6 @@ void telolet() {
 
 void telolet_stop() {
   note_idx = 0;
-  telolet_state = false;
+  prog_state &= ~1;
 }
 // END - TELOLET
