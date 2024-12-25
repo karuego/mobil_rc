@@ -34,6 +34,7 @@ BLYNK_DISCONNECTED() {
 BLYNK_INPUT_DEFAULT() {
   uint8_t val = getValue.asInt();
   Serial.println(val);
+  motor(val);
 }
 
 void motor(uint8_t val) {
