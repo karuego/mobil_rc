@@ -18,8 +18,33 @@ static uint32_t previous = 0;
 static uint32_t current;
 
 void setup() {
+  /*
+  PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO5_U, FUNC_GPIO5);
+  PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO4_U, FUNC_GPIO4);
+  PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO12_U, FUNC_GPIO12);
+  PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO13_U, FUNC_GPIO13);
+  PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
+
+  #define SET_GPIO_PIN_FUNC(PIN) PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO##PIN##_U, FUNC_GPIO##PIN);
+  SET_GPIO_PIN_FUNC(2)
+
+  // or
+  GPIO_REG_WRITE(GPIO_ENABLE_W1TS_ADDRESS, (1 << GPIO5));
+  GPIO_REG_WRITE(GPIO_ENABLE_W1TS_ADDRESS, (1 << GPIO4));
+  GPIO_REG_WRITE(GPIO_ENABLE_W1TS_ADDRESS, (1 << GPIO12));
+  GPIO_REG_WRITE(GPIO_ENABLE_W1TS_ADDRESS, (1 << GPIO13));
+  GPIO_REG_WRITE(GPIO_ENABLE_W1TS_ADDRESS, (1 << GPIO2));
+
+  GPIO_REG_WRITE(
+    GPIO_ENABLE_W1TS_ADDRESS,
+    (1 << GPIO5) | (1 << GPIO4) | (1 << GPIO12) | (1 << GPIO13) |
+    (1 << GPIO2)
+  );
+  */
   for (const uint8_t &pin : pins)
-    pinMode(pin, OUTPUT);
+    // pinMode(pin, OUTPUT);
+    // PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIOS_U + pin);
+    GPIO_REG_WRITE(GPIO_ENABLE_W1TS_ADDRESS, (1 << pin));
   Blynk.begin(BLYNK_AUTH_TOKEN, WIFI_SSID, WIFI_PASS);
 }
 
@@ -54,6 +79,9 @@ BLYNK_INPUT_DEFAULT() {
   static uint8_t prev_val = 0;
   uint8_t val = getValue.asInt();
   Serial.println(val);
+  for (uint8_t i = 0; i < 8; i++)
+    Serial.print((val >> i) & 0x01);
+  Serial.println();
 
   if (prev_val != 0 && val != 0) {
     if (val & 128) {
@@ -80,11 +108,20 @@ BLYNK_INPUT_DEFAULT() {
 
 void motor(uint8_t val) {
   for (uint8_t i = 0; i < PINS_LEN; i++)
-    digitalWrite(pins[i], (val >> i) & 0x01);
+    // digitalWrite(pins[i], (val >> i) & 0x01);
+    /*if ((val >> i) & 0x01)
+      GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, (1 << pins[i]));
+    else
+      GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, (1 << pins[i]));
+    */
+    GPIO_REG_WRITE(GPIO_OUT_ADDRESS, (((val >> i) & 0x01) << pins[i]));
 }
 
 void waiting() {
-  digitalWrite(pins[4], !digitalRead(pins[4]));
+  // digitalWrite(pins[4], !digitalRead(pins[4]));
+  // digitalWrite(pins[4], (prog_state ^= 4));
+  // digitalWrite(pins[4], (((prog_state ^= 4) >> 2) & 1U));
+  GPIO_REG_WRITE(GPIO_OUT_ADDRESS, ((((prog_state ^= 4) >> 2) & 1U) << pins[4]));
   if (prog_state & 2) return;
   prog_state |= 2;
 }
