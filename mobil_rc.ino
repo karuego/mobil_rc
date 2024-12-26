@@ -1,12 +1,14 @@
+#ifndef USE_ENV_VAR
 #define BLYNK_PRINT Serial
 #define BLYNK_TEMPLATE_ID ""
 #define BLYNK_TEMPLATE_NAME ""
 #define BLYNK_AUTH_TOKEN ""
-#include <ESP8266WiFi.h>
-#include <BlynkSimpleEsp8266.h>
 
 #define WIFI_SSID "mobil_rc"
 #define WIFI_PASS ""
+#endif
+
+#include <BlynkSimpleEsp8266.h>
 
 const uint8_t pins[] = {5, 4, 12, 13, 2};
 #define PINS_LEN (sizeof(pins) / sizeof(pins[0]))
