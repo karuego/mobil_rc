@@ -2,6 +2,7 @@
 
 SoftwareSerial mySerial(2, 3);
 const uint8_t pins[] = {8, 9, 10, 11, 13};
+#define PINS_LEN sizeof(pins) / sizeof(pins[0])
 
 void setup() {
   Serial.begin(9600);
@@ -30,6 +31,6 @@ void loop() {
 }
 
 void motor(uint8_t val) {
-  for (uint8_t i = 0; i < 5; i++)
+  for (uint8_t i = 0; i < PINS_LEN; i++)
     digitalWrite(pins[i], (val >> i) & 1);
 }
