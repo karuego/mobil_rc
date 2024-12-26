@@ -13,9 +13,9 @@
 const uint8_t pins[5] = {5, 4, 12, 13, 2}; // GPIO
 #define PINS_LEN sizeof(pins) / sizeof(pins[0])
 
-uint8_t prog_state;
-static uint32_t previous = 0;
-static uint32_t current;
+uint8_t states;
+uint32_t previous = 0;
+uint32_t current;
 
 void setup() {
   for (const uint8_t &pin : pins)
@@ -67,10 +67,11 @@ BLYNK_INPUT_DEFAULT() {
   }
 
   if (val & 32) {
-    if (prog_state & 1) {
+    // TODO
+    if (states & 1) {
       telolet_stop();
     } else {
-      prog_state |= 1U;
+      states |= 1U;
     }
   }
 
@@ -85,13 +86,13 @@ void motor(uint8_t val) {
 
 void waiting() {
   digitalWrite(pins[4], !digitalRead(pins[4]));
-  if (prog_state & 2) return;
-  prog_state |= 2;
+  if (states & 2) return;
+  states |= 2u;
 }
 
 void waiting0() {
-  if (!(prog_state & 2)) return;
-  prog_state &= ~2;
+  if (!(states & 2)) return;
+  states &= ~2;
   digitalWrite(pins[4], 0);
 }
 
@@ -116,8 +117,8 @@ constexpr uint16_t total_duration = sum_array(duration, note_length);
 
 uint8_t note_idx = 0;
 
-void telolet() {
-  if (!(prog_state & 1)) return;
+inline void telolet() {
+  if (!(states & 1)) return;
 
   if (current - previous < duration[note_idx])
     return;
@@ -130,6 +131,6 @@ void telolet() {
 
 void telolet_stop() {
   note_idx = 0;
-  prog_state &= ~1;
+  states &= ~1;
 }
 // END - TELOLET
