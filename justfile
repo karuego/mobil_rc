@@ -5,7 +5,8 @@ default:
     echo 'Hello, world!'
 
 push:
-    git push --all --tags
+    git push --all
+    git push --tags
 
 build +args='--verify':
     arduino-cli compile {{ args }} -b $FQBN --port $PORT \
